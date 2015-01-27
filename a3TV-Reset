@@ -1,0 +1,160 @@
+#!/bin/bash
+#
+## Script to start Admin Bldg lobby monitors
+## Canyon County IT
+## Version 1.0  RMH 6/30/2014
+# 
+## Note that all Sharp TV IP Commands are made up of 8 bytes plus
+## the carriage return character.  Commands shorter than 8 bytes
+## (nearly all of them) must be padded with blanks before the 
+## carriage return character.
+#
+## This script is subject to failure on firmware updates, user 
+## intervention with defaults or expected cursor position, etc.
+#
+## The use of the sleep commands forces a pause between commands
+## to give the TVs time to do I/O with the DLNA server and other 
+## actions that require some processing time on the TVs.  Without
+## the pauses, IP commands are dropped, and the results can be
+## unexpected.
+#
+#  Setup TV IP's
+#
+#DISPLAY_1="10.0.41.17"  #Admin1
+#DISPLAY_2="10.0.41.226" #Admin2
+DISPLAY_1="10.0.41.231" #Admin3
+#DISPLAY_4="10.0.42.222" #HR
+#
+PORT_NUM="10002"
+REMOTE_PWR_ENABLE="RSPW2   \x0D"
+POWER_ON="POWR1   \x0D"
+INPUT_KEY="RCKY36  \x0D"
+ARROW_UP="RCKY41  \x0D"
+ARROW_DOWN="RCKY42  \x0D"
+ARROW_LEFT="RCKY43  \x0D"
+ARROW_RIGHT="RCKY44  \x0D"
+ENTER_KEY="RCKY40  \x0D"
+BLUE_KEY="RCKY52  \x0D"
+TV_MODE="ITVD0   \x0D"
+VGA_IN="IAVD8   \x0D"
+#
+##
+## Don't run this script on holidays (we assume that crontab is set
+##  for Monday-Friday execution
+if test $(grep $(date +%Y-%m-%d) /home/videomgr/scripts/holiday.txt -ic) -ne 0
+	then echo "Today is a holiday--displays remain off"
+else
+	## Set TVs to accept Commands (probably only needed once, not every execution)
+	echo "Sending Remote command enable on $DISPLAY_1, port number $PORT_NUM"
+	echo -e "$REMOTE_PWR_ENABLE" | socat - TCP4:$DISPLAY_1:$PORT_NUM
+	#echo "Sending Remote command enable on $DISPLAY_2, port number $PORT_NUM"
+	#echo -e "$REMOTE_PWR_ENABLE" | socat - TCP4:$DISPLAY_2:$PORT_NUM
+	#echo "Sending Remote command enable on $DISPLAY_3, port number $PORT_NUM"
+	#echo -e "$REMOTE_PWR_ENABLE" | socat - TCP4:$DISPLAY_3:$PORT_NUM
+	#echo "Sending Remote command enable on $DISPLAY_4, port number $PORT_NUM"
+	#echo -e "$REMOTE_PWR_ENABLE" | socat - TCP4:$DISPLAY_4:$PORT_NUM
+	sleep 3
+	## Power on the TVs and wait long enough for them to wake up, 
+	##  discover the USB stick connected, and find the DLNA server
+	echo "Sending Power On command"
+	echo -e "$POWER_ON" | socat - TCP4:$DISPLAY_1:$PORT_NUM
+	#echo -e "$POWER_ON" | socat - TCP4:$DISPLAY_2:$PORT_NUM
+	#echo -e "$POWER_ON" | socat - TCP4:$DISPLAY_3:$PORT_NUM
+	#echo -e "$POWER_ON" | socat - TCP4:$DISPLAY_4:$PORT_NUM
+	sleep 10
+	## Let's force the TV into VGA Mode in case someone left it in a different
+	## condition or input mode
+	echo "Going into VGA Mode"
+	echo -e "$VGA_IN" | socat - TCP4:$DISPLAY_1:$PORT_NUM
+	#echo -e "$VGA_IN" | socat - TCP4:$DISPLAY_2:$PORT_NUM
+	#echo -e "$VGA_IN" | socat - TCP4:$DISPLAY_3:$PORT_NUM
+	#echo -e "$VGA_IN" | socat - TCP4:$DISPLAY_4:$PORT_NUM
+	sleep 3
+	## Go into Input Mode
+	echo "Going into Input Mode"
+	echo -e "$INPUT_KEY" | socat - TCP4:$DISPLAY_1:$PORT_NUM
+	#echo -e "$INPUT_KEY" | socat - TCP4:$DISPLAY_2:$PORT_NUM
+	#echo -e "$INPUT_KEY" | socat - TCP4:$DISPLAY_3:$PORT_NUM
+	#echo -e "$INPUT_KEY" | socat - TCP4:$DISPLAY_4:$PORT_NUM
+	sleep 2
+	## Jump to DLNA Menu
+	echo "Jump to DLNA"
+	echo -e "$ARROW_DOWN" | socat - TCP4:$DISPLAY_1:$PORT_NUM
+	#echo -e "$ARROW_DOWN" | socat - TCP4:$DISPLAY_2:$PORT_NUM
+	#echo -e "$ARROW_DOWN" | socat - TCP4:$DISPLAY_3:$PORT_NUM
+	#echo -e "$ARROW_DOWN" | socat - TCP4:$DISPLAY_4:$PORT_NUM
+	sleep 2
+
+	echo -e "$ENTER_KEY" | socat - TCP4:$DISPLAY_1:$PORT_NUM
+	#echo -e "$ENTER_KEY" | socat - TCP4:$DISPLAY_2:$PORT_NUM
+	#echo -e "$ENTER_KEY" | socat - TCP4:$DISPLAY_3:$PORT_NUM
+	#echo -e "$ENTER_KEY" | socat - TCP4:$DISPLAY_4:$PORT_NUM
+	sleep 10
+	## Select Photos
+	echo "Selecting 'Photos'"
+	echo -e "$ENTER_KEY" | socat - TCP4:$DISPLAY_1:$PORT_NUM
+	#echo -e "$ENTER_KEY" | socat - TCP4:$DISPLAY_2:$PORT_NUM
+	#echo -e "$ENTER_KEY" | socat - TCP4:$DISPLAY_3:$PORT_NUM
+	#echo -e "$ENTER_KEY" | socat - TCP4:$DISPLAY_4:$PORT_NUM
+	sleep 4
+	## Find the appropriate Photo Folder(s)
+	echo "Choosing Photo Folder"
+	#Images
+	echo -e "$ARROW_RIGHT" | socat - TCP4:$DISPLAY_1:$PORT_NUM
+	#echo -e "$ARROW_RIGHT" | socat - TCP4:$DISPLAY_2:$PORT_NUM
+	#echo -e "$ARROW_RIGHT" | socat - TCP4:$DISPLAY_3:$PORT_NUM
+	#echo -e "$ARROW_RIGHT" | socat - TCP4:$DISPLAY_4:$PORT_NUM
+	sleep 4
+	echo -e "$ENTER_KEY" | socat - TCP4:$DISPLAY_1:$PORT_NUM
+	#echo -e "$ENTER_KEY" | socat - TCP4:$DISPLAY_2:$PORT_NUM
+	#echo -e "$ENTER_KEY" | socat - TCP4:$DISPLAY_3:$PORT_NUM
+	#echo -e "$ENTER_KEY" | socat - TCP4:$DISPLAY_4:$PORT_NUM
+	sleep 4
+	#Folders
+	echo -e "$ARROW_RIGHT" | socat - TCP4:$DISPLAY_1:$PORT_NUM
+	#echo -e "$ARROW_RIGHT" | socat - TCP4:$DISPLAY_2:$PORT_NUM
+	#echo -e "$ARROW_RIGHT" | socat - TCP4:$DISPLAY_3:$PORT_NUM
+	#echo -e "$ARROW_RIGHT" | socat - TCP4:$DISPLAY_4:$PORT_NUM
+	sleep 4
+	echo -e "$ENTER_KEY" | socat - TCP4:$DISPLAY_1:$PORT_NUM
+	#echo -e "$ENTER_KEY" | socat - TCP4:$DISPLAY_2:$PORT_NUM
+	#echo -e "$ENTER_KEY" | socat - TCP4:$DISPLAY_3:$PORT_NUM
+	#echo -e "$ENTER_KEY" | socat - TCP4:$DISPLAY_4:$PORT_NUM
+	sleep 4
+	#DLNA Media
+	echo -e "$ENTER_KEY" | socat - TCP4:$DISPLAY_1:$PORT_NUM
+	#echo -e "$ENTER_KEY" | socat - TCP4:$DISPLAY_2:$PORT_NUM
+	#echo -e "$ENTER_KEY" | socat - TCP4:$DISPLAY_3:$PORT_NUM
+	#echo -e "$ENTER_KEY" | socat - TCP4:$DISPLAY_4:$PORT_NUM
+	sleep 4
+	#Admin1
+	#echo -e "$ENTER_KEY" | socat - TCP4:$DISPLAY_1:$PORT_NUM
+	#Admin2
+	#echo -e "$ARROW_RIGHT" | socat - TCP4:$DISPLAY_2:$PORT_NUM
+	#sleep 2
+	#echo -e "$ENTER_KEY" | socat - TCP4:$DISPLAY_2:$PORT_NUM
+	#Admin3
+	echo -e "$ARROW_RIGHT" | socat - TCP4:$DISPLAY_1:$PORT_NUM
+	sleep 2
+	echo -e "$ARROW_RIGHT" | socat - TCP4:$DISPLAY_1:$PORT_NUM
+	sleep 2
+	echo -e "$ENTER_KEY" | socat - TCP4:$DISPLAY_1:$PORT_NUM
+	sleep 4
+	#HR
+	#echo -e "$ARROW_RIGHT" | socat - TCP4:$DISPLAY_4:$PORT_NUM
+	#sleep 2
+	#echo -e "$ARROW_RIGHT" | socat - TCP4:$DISPLAY_4:$PORT_NUM
+	#sleep 2
+	#echo -e "$ARROW_RIGHT" | socat - TCP4:$DISPLAY_4:$PORT_NUM
+	#sleep 2
+	#echo -e "$ENTER_KEY" | socat - TCP4:$DISPLAY_4:$PORT_NUM
+	#sleep 4
+	## Select SlideShow
+	echo "Starting SlideShow"
+	echo -e "$BLUE_KEY" | socat - TCP4:$DISPLAY_1:$PORT_NUM
+	#echo -e "$BLUE_KEY" | socat - TCP4:$DISPLAY_2:$PORT_NUM
+	#echo -e "$BLUE_KEY" | socat - TCP4:$DISPLAY_3:$PORT_NUM	
+	#echo -e "$BLUE_KEY" | socat - TCP4:$DISPLAY_4:$PORT_NUM	
+
+fi
+echo "Script Complete"
