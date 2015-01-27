@@ -1,0 +1,35 @@
+#!/bin/bash
+#
+## Script to turn off Admin Bldg lobby monitors
+## Canyon County IT
+## Version 1.0  RMH 6/30/2014
+# 
+## Note that all Sharp TV IP Commands are made up of 8 bytes plus
+## the carriage return character.  Commands shorter than 8 bytes
+## (nearly all of them) must be padded with blanks before the 
+## carriage return character.
+## This script is subject to failure on software updates, etc.
+#
+#  Setup TV IP's
+#
+DISPLAY_1="10.0.60.238"
+DISPLAY_2="10.0.60.239"
+DISPLAY_3="10.0.60.240"
+#
+PORT_NUM="10002"
+REMOTE_PWR_ENABLE="RSPW2   \x0D"
+POWER_OFF="POWR0   \x0D"
+#
+## Set TVs to accept Commands (probably only needed once, not every execution)
+echo "Sending Remote command enable"
+echo -e "$REMOTE_PWR_ENABLE" | socat - TCP4:$DISPLAY_1:$PORT_NUM
+echo -e "$REMOTE_PWR_ENABLE" | socat - TCP4:$DISPLAY_2:$PORT_NUM
+echo -e "$REMOTE_PWR_ENABLE" | socat - TCP4:$DISPLAY_3:$PORT_NUM
+sleep 3
+## Power off the TV 
+echo "Sending Power Off command"
+echo -e "$POWER_OFF" | socat - TCP4:$DISPLAY_1:$PORT_NUM
+echo -e "$POWER_OFF" | socat - TCP4:$DISPLAY_2:$PORT_NUM
+echo -e "$POWER_OFF" | socat - TCP4:$DISPLAY_3:$PORT_NUM
+sleep 4
+echo "Script Complete"
